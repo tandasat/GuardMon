@@ -19,19 +19,23 @@ demo purpose. See a project page for more details of HyperPlatform:
 
 Installation and Uninstallation
 --------------------------------
-Download an archive file for compiled files form the release page.
-- https://github.com/tandasat/GuardMon/releases
+On the x64 platform, you have to enable test signing to install the driver.
+To do that, open the command prompt with the administrator privilege and type
+the following command, and then restart the system to activate the change:
 
-To install the driver, extract the archive file and use the 'sc' command. For
-installation:
+    >bcdedit /set testsigning on
+
+To install and uninstall the driver, use the 'sc' command. For installation:
 
     >sc create GuardMon type= kernel binPath= C:\Users\user\Desktop\GuardMon.sys
     >sc start GuardMon
 
-And for uninstallation:
+For uninstallation:
 
     >sc stop GuardMon
     >sc delete GuardMon
+    >bcdedit /deletevalue testsigning
+
 
 Note that the system must support the Intel VT-x and EPT technology to
 successfully install the driver.

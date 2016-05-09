@@ -6,16 +6,11 @@
 // This module implements extended functions for the GuardMon.
 //
 #include "guard_mon.h"
+#include <intrin.h>
 #include "../HyperPlatform/HyperPlatform/common.h"
 #include "../HyperPlatform/HyperPlatform/log.h"
 #include "../HyperPlatform/HyperPlatform/util.h"
 #include "../HyperPlatform/HyperPlatform/asm.h"
-#include "../HyperPlatform/HyperPlatform/kernel_stl.h"
-#include <vector>
-#include <string>
-#include <memory>
-#include <set>
-#include <algorithm>
 
 extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,8 +23,15 @@ extern "C" {
 // constants and macros
 //
 
+// Install patch(es) to the kernel so that PatchGuard fires and GuardMon can
+// detect it too. It is, however, mostly for a demonstration purpose because
+// GuardMon cannot always kill PatchGuard. For example, PatchGuard may run with
+// a image region or may not access to CR0 (confirmed on Win10 10586). It means
+// GuardMon is unable to catch PatchGuard's activities.
+static const bool kGMonpInstallPatch = false;
+
 // Enables dirty, unreliable hack for Windows 10.
-static const bool kPgMonEnableDirtyHack = true;
+static const bool kGMonpEnableDirtyHack = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -46,8 +48,6 @@ struct PgContext {
 //
 
 PVOID NTAPI RtlPcToFileHeader(_In_ PVOID pc_value, _Out_ PVOID *base_of_image);
-
-extern "C++" static void GMonpDemoStl();
 
 static ULONG_PTR GMonIsPgExcutionContext(_In_ const GpRegisters *registers);
 
@@ -78,7 +78,7 @@ static void *g_gmonp_ExAcquireResourceSharedLite = nullptr;
 
 // Indicates if the system is Windows 10 where dirty, unreliable hack can be
 // applied.
-static bool g_pgmon_IsWindows10 = false;
+static bool g_gmonp_is_windows10 = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -88,8 +88,6 @@ static bool g_pgmon_IsWindows10 = false;
 // Initializes GuardMon components
 _Use_decl_annotations_ NTSTATUS GMonInitialization() {
   PAGED_CODE();
-
-  GMonpDemoStl();
 
   g_gmonp_ExAcquireResourceSharedLite =
       UtilGetSystemProcAddress(L"ExAcquireResourceSharedLite");
@@ -103,22 +101,9 @@ _Use_decl_annotations_ NTSTATUS GMonInitialization() {
     return status;
   }
   if (os_version.dwMajorVersion == 10 && os_version.dwMinorVersion == 0) {
-    g_pgmon_IsWindows10 = true;
+    g_gmonp_is_windows10 = true;
   }
   return STATUS_SUCCESS;
-}
-
-// Uses STL for demonstration
-extern "C++" static void GMonpDemoStl() {
-  std::vector<std::unique_ptr<std::wstring>> strs;
-  for (auto i = 0ul; i < 10; ++i) {
-    strs.push_back(
-        std::make_unique<std::wstring>(L"i = " + std::to_wstring(i)));
-  }
-  // Using a lambda expression
-  std::for_each(strs.cbegin(), strs.cend(), [](const auto &str) {
-    HYPERPLATFORM_LOG_DEBUG("%S", str->c_str());
-  });
 }
 
 // Terminates GuardMon components
@@ -128,13 +113,15 @@ _Use_decl_annotations_ void GMonTermination() { PAGED_CODE(); }
 _Use_decl_annotations_ NTSTATUS GMonInstallPatchCallback(void *context) {
   UNREFERENCED_PARAMETER(context);
 
-  Idtr idt = {};
-  __sidt(&idt);
-  const auto old_limit = idt.limit;
-  idt.limit = 0xffff;
-  __lidt(&idt);
-  __sidt(&idt);
-  HYPERPLATFORM_LOG_INFO("Patched IDTL %04hx => %04hx", old_limit, idt.limit);
+  if (kGMonpInstallPatch) {
+    Idtr idt = {};
+    __sidt(&idt);
+    const auto old_limit = idt.limit;
+    idt.limit = 0xffff;
+    __lidt(&idt);
+    __sidt(&idt);
+    HYPERPLATFORM_LOG_INFO("Patched IDTL %04hx => %04hx", old_limit, idt.limit);
+  }
   return STATUS_SUCCESS;
 }
 
@@ -152,7 +139,7 @@ _Use_decl_annotations_ bool GMonIsNonImageKernelAddress(ULONG_PTR address) {
 // Takes out a flag indicating that CR0 modification does not take place
 _Use_decl_annotations_ void GMonRemoveNoCr0ModificationFlag(
     const GpRegisters *registers) {
-  if (!kPgMonEnableDirtyHack || !g_pgmon_IsWindows10) {
+  if (!g_gmonp_is_windows10 || !kGMonpEnableDirtyHack) {
     return;
   }
 
