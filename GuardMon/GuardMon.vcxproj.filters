@@ -19,11 +19,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Inf Include="GuardMon.inf">
-      <Filter>Driver Files</Filter>
-    </Inf>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\HyperPlatform\HyperPlatform\driver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,6 +44,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\HyperPlatform\HyperPlatform\kernel_stl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\HyperPlatform\HyperPlatform\global_object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\HyperPlatform\HyperPlatform\hotplug_callback.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\HyperPlatform\HyperPlatform\power_callback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,6 +97,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\HyperPlatform\HyperPlatform\util_page_constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\HyperPlatform\HyperPlatform\global_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\HyperPlatform\HyperPlatform\hotplug_callback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\HyperPlatform\HyperPlatform\power_callback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

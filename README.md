@@ -23,7 +23,7 @@ Clone full source code from Github with a below command and compile it on Visual
 Studio.
 
     $ git clone --recursive https://github.com/tandasat/GuardMon.git
-    
+
 On the x64 platform, you have to enable test signing to install the driver.
 To do that, open the command prompt with the administrator privilege and type
 the following command, and then restart the system to activate the change:
@@ -47,7 +47,7 @@ successfully install the driver.
 
 To install the driver on a virtual machine on VMware Workstation, see an "Using
 VMware Workstation" section in the HyperPlatform User Document.
-- http://tandasat.github.io/HyperPlatform/userdocument/
+- https://tandasat.github.io/HyperPlatform/userdocument/
 
 
 Output
